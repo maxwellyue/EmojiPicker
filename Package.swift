@@ -1,33 +1,28 @@
-// swift-tools-version: 5.10
+// swift-tools-version: 5.9
 
 import PackageDescription
 
 let package = Package(
-    name: "MCEmojiPicker",
+    name: "EmojiPicker",
     defaultLocalization: "en",
-    platforms: [.iOS("11.1")],
+    platforms: [
+        .iOS(.v16),
+        .macCatalyst(.v16),
+        .macOS(.v13)
+    ],
     products: [
-        .executable(name: "MCEmojiPickerJSON", targets: ["MCEmojiPickerJSON"]),
-        .library(name: "MCEmojiPicker", targets: ["MCEmojiPicker"])
+        .library(name: "EmojiPicker", targets: ["EmojiPicker"])
     ],
     dependencies: [],
     targets: [
         .target(
-            name: "MCEmojiPicker",
+            name: "EmojiPicker",
             dependencies: [],
-            path: "Sources/MCEmojiPicker",
+            path: "Sources/EmojiPicker",
             resources: [
-                .copy("Resources/EmojiDefinitions/travellingAndPlaces.json"),
-                .copy("Resources/EmojiDefinitions/symbols.json"),
-                .copy("Resources/EmojiDefinitions/items.json"),
-                .copy("Resources/EmojiDefinitions/foodAndDrinks.json"),
-                .copy("Resources/EmojiDefinitions/flags.json"),
-                .copy("Resources/EmojiDefinitions/emotionsAndPeople.json"),
-                .copy("Resources/EmojiDefinitions/animalsAndNature.json"),
-                .copy("Resources/EmojiDefinitions/activities.json"),
+                .process("Resources/Localizable.xcstrings")
             ]
-        ),
-        .executableTarget(name: "MCEmojiPickerJSON", dependencies: ["MCEmojiPicker"])
+        )
     ],
-    swiftLanguageVersions: [.v4_2]
+    swiftLanguageVersions: [.v5]
 )

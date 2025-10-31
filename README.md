@@ -1,8 +1,8 @@
-# MCEmojiPicker
+# EmojiPicker
 
-[![Version](https://img.shields.io/cocoapods/v/MCEmojiPicker.svg?style=flat)](https://cocoapods.org/pods/MCEmojiPicker)
-[![License](https://img.shields.io/cocoapods/l/MCEmojiPicker.svg?style=flat)](https://cocoapods.org/pods/MCEmojiPicker)
-[![Platform](https://img.shields.io/cocoapods/p/MCEmojiPicker.svg?style=flat)](https://cocoapods.org/pods/MCEmojiPicker)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Platform](https://img.shields.io/badge/platform-iOS%2016.0%2B%20%7C%20macOS%2013.0%2B-lightgrey.svg)](Package.swift)
+[![Swift](https://img.shields.io/badge/Swift-5.9-orange.svg)](Package.swift)
 
 <p float="left">
 <img src="https://user-images.githubusercontent.com/50948518/216799717-25b3e4ed-b4c5-4166-91a2-72374b0564f9.gif" width="280">
@@ -10,9 +10,11 @@
 
 ## About
 
-<b>It is a customizable library implementing macOS style emoji picker popover.</b>
+<b>A native SwiftUI emoji picker library supporting both iOS and macOS.</b>
 <br><br>
-If you are interested in how I developed it and what difficulties I encountered in the process, you can read an article on [Medium](https://medium.com/@izzyumkin/an-emoji-selection-element-aka-emojipicker-for-ios-like-in-macos-e2fa022b80af), [Habr](https://habr.com/ru/post/716194/) about it.
+**Version 2.0+** is a complete rewrite in SwiftUI with full support for iOS 16+ and macOS 13+. The library now provides a native, cross-platform experience with modern SwiftUI patterns.
+<br><br>
+If you are interested in how I developed the original UIKit version and what difficulties I encountered in the process, you can read an article on [Medium](https://medium.com/@izzyumkin/an-emoji-selection-element-aka-emojipicker-for-ios-like-in-macos-e2fa022b80af), [Habr](https://habr.com/ru/post/716194/) about it.
 And if you like the project, don't forget to `put star ★`.
 
 #### Limitations
@@ -47,9 +49,6 @@ If you use a `MCEmojiPicker`, add your application via Pull Request. Fore more i
 
 - [Requirements](#requirements)
 - [Installation](#installation)
-    - [CocoaPods](#cocoapods)
-    - [Swift Package Manager](#swift-package-manager)
-    - [Manually](#manually)
 - [Quick Start](#quick-start)
 - [Usage](#usage)
     - [Selected emoji category tint color](#selected-emoji-category-tint-color)
@@ -64,126 +63,153 @@ If you use a `MCEmojiPicker`, add your application via Pull Request. Fore more i
 
 ## Requirements
 
-- Swift `4.2` & `5.0`
-- Ready for use on iOS 12.0+
-- SwiftUI is supported from iOS 13.0
+- Swift `5.9+`
+- iOS 16.0+
+- macOS 13.0+
+- SwiftUI native implementation
 
 ## Installation
 
-### CocoaPods
-
-[CocoaPods](https://cocoapods.org) is a dependency manager for Cocoa projects. For usage and installation instructions, visit their website. To integrate `MCEmojiPicker` into your Xcode project using CocoaPods, specify it in your `Podfile`:
-
-```ruby
-pod 'MCEmojiPicker'
-```
-
 ### Swift Package Manager
 
-The [Swift Package Manager](https://swift.org/package-manager/) is a tool for managing the distribution of Swift code. It’s integrated with the Swift build system to automate the process of downloading, compiling, and linking dependencies.
+Add `EmojiPicker` to your project using Xcode:
 
-To integrate `MCEmojiPicker` into your Xcode project using Xcode 11, specify it in `Project > Swift Packages`:
+1. File > Add Package Dependencies
+2. Enter package URL: `https://github.com/izyumkin/MCEmojiPicker`
+3. Select version and add to your target
 
-```ogdl
-https://github.com/izyumkin/MCEmojiPicker
+Or add it to your `Package.swift`:
+
+```swift
+dependencies: [
+    .package(url: "https://github.com/izyumkin/MCEmojiPicker", from: "2.0.0")
+]
 ```
-
-### Manually
-
-If you prefer not to use any of the aforementioned dependency managers, you can integrate `MCEmojiPicker` into your project manually. Put `Source/MCEmojiPicker` folder in your Xcode project. Make sure to enable `Copy items if needed` and `Create groups`.
 
 ## Quick Start
-Create `UIButton` and add selector as action:
-```swift
-@objc private func selectEmojiAction(_ sender: UIButton) {
-    let viewController = MCEmojiPickerViewController()
-    viewController.delegate = self
-    viewController.sourceView = sender
-    present(viewController, animated: true)
-}
-```
 
-And then recieve emoji in the delegate method:
+Add the emoji picker to any SwiftUI view using the `.emojiPicker` modifier:
+
 ```swift
-extension ViewController: MCEmojiPickerDelegate {
-    func didGetEmoji(emoji: String) {
-        emojiButton.setTitle(emoji, for: .normal)
+import SwiftUI
+import EmojiPicker
+
+struct ContentView: View {
+    @State private var selectedEmoji = "😀"
+    @State private var showPicker = false
+    
+    var body: some View {
+        Button(selectedEmoji) {
+            showPicker = true
+        }
+        .emojiPicker(
+            isPresented: $showPicker,
+            selectedEmoji: $selectedEmoji
+        )
     }
 }
 ```
 
+Or use the picker directly:
+
+```swift
+EmojiPicker(
+    selectedEmoji: $selectedEmoji,
+    isDismissAfterChoosing: true,
+    selectedCategoryTintColor: .blue
+)
+```
+
 ## Usage
 
-`sourceView` is the view containing the anchor rectangle for the popover. You can create any `UIView` instance and set it in this property. 
+### Using the View Modifier
 
-### Selected emoji category tint color
-Color for the selected emoji category. The default value of this property is `.systemBlue`.
-
-```swift
-viewController.selectedEmojiCategoryTintColor = .systemRed
-```
-
-### Arrow direction
-The direction of the arrow for EmojiPicker. The default value of this property is `.up`.
+The easiest way to use MCEmojiPicker is with the `.emojiPicker()` modifier:
 
 ```swift
-viewController.arrowDirection = .up
-```
-
-### Horizontal inset
-Inset from the `sourceView` border. The default value of this property is `0`.
-
-```swift
-viewController.horizontalInset = 0
-```
-
-### Is dismiss after choosing
-Defines whether to dismiss emoji picker or not after choosing. The default value of this property is `true`.
-
-```swift
-viewController.isDismissAfterChoosing = true
-```
-
-### Custom height
-Custom height for EmojiPicker. The default value of this property is `nil`.
-
-```swift
-viewController.customHeight = 300
-```
-
-### Feedback generator style
-Feedback generator style. To turn off, set `nil` to this parameter. The default value of this property is `.light`.
-
-```swift
-viewController.feedBackGeneratorStyle = .soft
-```
-
-## SwiftUI
-
-Use like system popover. All settings are available in the method initializer.
-
-```swift
-Button(selectedEmoji) {
-    isPresented.toggle()
-}.emojiPicker(
-    isPresented: $isPresented,
-    selectedEmoji: $selectedEmoji
-)
-```
-
-or interact directly with the SwiftUI wrapper for the MCEmojiPickerViewController:
-
-```swift
-MCEmojiPickerRepresentableController(
-    isPresented: $isPresented,
+.emojiPicker(
+    isPresented: $showPicker,
     selectedEmoji: $selectedEmoji,
-    arrowDirection: .up,
-    customHeight: 380.0,
-    horizontalInset: .zero,
-    isDismissAfterChoosing: true,
-    selectedEmojiCategoryTintColor: .systemBlue,
-    feedBackGeneratorStyle: .light
+    isDismissAfterChoosing: true,           // Default: true
+    selectedCategoryTintColor: .blue         // Default: .blue
 )
+```
+
+### Using the Picker Directly
+
+You can also use the picker as a standalone view:
+
+```swift
+EmojiPicker(
+    selectedEmoji: $selectedEmoji,
+    isDismissAfterChoosing: true,
+    selectedCategoryTintColor: .blue
+)
+```
+
+### Parameters
+
+- **isPresented**: Binding to control picker visibility
+- **selectedEmoji**: Binding that receives the selected emoji string
+- **isDismissAfterChoosing**: Whether to dismiss after selection (default: `true`)
+- **selectedCategoryTintColor**: Color for selected category (default: `.blue`)
+
+### Platform-Specific Features
+
+- **iOS**: Includes haptic feedback on emoji selection
+- **macOS**: Supports hover states and keyboard navigation
+- **Both**: Context menu for skin tone selection (right-click or long-press)
+
+## Examples
+
+### Basic Usage
+
+```swift
+import SwiftUI
+import EmojiPicker
+
+struct MyView: View {
+    @State private var emoji = "😀"
+    @State private var showPicker = false
+    
+    var body: some View {
+        VStack {
+            Text("Selected: \(emoji)")
+            
+            Button("Choose Emoji") {
+                showPicker = true
+            }
+        }
+        .emojiPicker(
+            isPresented: $showPicker,
+            selectedEmoji: $emoji
+        )
+    }
+}
+```
+
+### Custom Styling
+
+```swift
+.emojiPicker(
+    isPresented: $showPicker,
+    selectedEmoji: $emoji,
+    isDismissAfterChoosing: false,
+    selectedCategoryTintColor: .purple
+)
+```
+
+### macOS Window
+
+```swift
+@main
+struct MyApp: App {
+    var body: some Scene {
+        WindowGroup {
+            ContentView()
+        }
+    }
+}
 ```
 
 ## Localization
