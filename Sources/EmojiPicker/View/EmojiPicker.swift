@@ -29,12 +29,15 @@ public struct EmojiPicker: View {
     @Binding public var selection: String
     public var isDismissAfterChoosing: Bool
 
-    public init(selection: Binding<String>, isDismissAfterChoosing: Bool = true) {
+    public init(selection: Binding<String>, isDismissAfterChoosing: Bool = true, unicodeManager: UnicodeManagerProtocol = UnicodeManager()) {
         self._selection = selection
         self.isDismissAfterChoosing = isDismissAfterChoosing
+        self.unicodeManager = unicodeManager
     }
 
-    @StateObject private var viewModel = EmojiPickerViewModel()
+    @State private var currentCategory: EmojiCategoryType? = .frequentlyUsed
+    @State private var allEmojiCategories: [EmojiCategory] = []
+    private let unicodeManager: UnicodeManagerProtocol
 
     public var body: some View {
         NavigationStack {
@@ -42,13 +45,18 @@ public struct EmojiPicker: View {
                 ScrollViewReader { scrollProxy in
                     ScrollView {
                         LazyVGrid(columns: [GridItem(.adaptive(minimum: 36, maximum: .infinity), spacing: 12)], spacing: 12) {
-                            ForEach(viewModel.emojiCategories, id: \.type) { category in
+                            ForEach(allEmojiCategories, id: \.type) { category in
                                 Section {
                                     ForEach(category.emojis, id: \.self) { emoji in
                                         EmojiCell(
                                             emoji: emoji,
                                             categoryType: category.type,
-                                            viewModel: viewModel
+                                            onSelect: { emojiString in
+                                                selection = emojiString
+                                                if isDismissAfterChoosing {
+                                                    dismiss()
+                                                }
+                                            }
                                         )
                                         // 使用 category.type 和 emojiKeys 作为唯一 id
                                         .id("\(category.type.rawValue)-\(emoji.emojiKeys)")
@@ -65,9 +73,9 @@ public struct EmojiPicker: View {
                     }
                     .modify {
                         if #available(iOS 17.0, macOS 14.0, *) {
-                            $0.scrollPosition(id: $viewModel.selectedCategory, anchor: .top)
+                            $0.scrollPosition(id: $currentCategory, anchor: .top)
                         } else {
-                            $0.onChange(of: viewModel.selectedCategory) { newType in
+                            $0.onChange(of: currentCategory) { newType in
                                 withAnimation {
                                     scrollProxy.scrollTo(newType, anchor: .top)
                                 }
@@ -78,10 +86,7 @@ public struct EmojiPicker: View {
 
                 Divider()
 
-                CategoryBar(
-                    categories: viewModel.emojiCategories,
-                    selectedCategory: $viewModel.selectedCategory
-                )
+                CategoryBar(categories: allEmojiCategories, selection: $currentCategory)
             }
             .navigationTitle("Emoji")
             #if os(iOS) || targetEnvironment(macCatalyst)
@@ -113,13 +118,9 @@ public struct EmojiPicker: View {
                     #endif
                 }())
         }
-        .onChange(of: viewModel.selectedEmoji) { newValue in
-            if let emoji = newValue {
-                selection = emoji.string
-                if isDismissAfterChoosing {
-                    dismiss()
-                }
-            }
+        .task {
+            // 初始化 emoji 分类
+            allEmojiCategories = unicodeManager.getEmojisForCurrentIOSVersion()
         }
         .modify {
             if #available(iOS 17.0, macOS 14.0, *) {
@@ -135,18 +136,22 @@ public struct EmojiPicker: View {
 #Preview {
     @Previewable @State var isPresented = true
     @Previewable @State var selectedEmoji = ""
+    VStack {
+        Button(action: {
+            isPresented.toggle()
+        }) {
+            Text(verbatim: "Show Emoji Picker")
+        }
+        .buttonStyle(.borderedProminent)
+        .padding()
+        .sheet(isPresented: $isPresented) {
+            EmojiPicker(
+                selection: $selectedEmoji,
+                isDismissAfterChoosing: true
+            )
+        }
 
-    Button(action: {
-        isPresented.toggle()
-    }) {
-        Text(verbatim: "Show Emoji Picker :  \(selectedEmoji)")
-    }
-    .buttonStyle(.borderedProminent)
-    .padding()
-    .sheet(isPresented: $isPresented) {
-        EmojiPicker(
-            selection: $selectedEmoji,
-            isDismissAfterChoosing: true
-        )
+        Text(selectedEmoji)
+            .font(.largeTitle)
     }
 }

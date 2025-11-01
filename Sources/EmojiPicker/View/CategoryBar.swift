@@ -1,5 +1,5 @@
 // The MIT License (MIT)
-// Copyright © 2024 Ivan Izyumkin
+// Copyright © 2025 Maxwell
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -24,7 +24,7 @@ import SwiftUI
 /// 底部分类栏视图
 struct CategoryBar: View {
     let categories: [EmojiCategory]
-    @Binding var selectedCategory: EmojiCategoryType?
+    @Binding var selection: EmojiCategoryType?
 
     private let categoryIcons: [EmojiCategoryType: String] = [
         .frequentlyUsed: "clock",
@@ -42,10 +42,10 @@ struct CategoryBar: View {
         HStack(spacing: 4) {
             ForEach(Array(categories.enumerated()), id: \.offset) { _, category in
                 Button {
-                    selectedCategory = category.type
+                    selection = category.type
                 } label: {
                     VStack(spacing: 4) {
-                        let isSelected = (selectedCategory == category.type)
+                        let isSelected = (selection == category.type)
                         Image(systemName: categoryIcons[category.type] ?? "questionmark")
                             .font(.title2)
                             .foregroundStyle(isSelected ? AnyShapeStyle(.tint) : AnyShapeStyle(Color.secondary))
@@ -61,7 +61,7 @@ struct CategoryBar: View {
         .padding(.vertical, 8)
         .modify {
             if #available(iOS 17.0, macOS 14.0, *) {
-                $0.sensoryFeedback(.selection, trigger: self.selectedCategory)
+                $0.sensoryFeedback(.selection, trigger: self.selection)
             } else {
                 $0
             }
@@ -71,7 +71,7 @@ struct CategoryBar: View {
 
 @available(iOS 18.0, macOS 15.0, *)
 #Preview {
-    @Previewable @State var selectedCategory: EmojiCategoryType?
+    @Previewable @State var selection: EmojiCategoryType?
     CategoryBar(categories: UnicodeManager().getEmojisForCurrentIOSVersion(),
-                selectedCategory: $selectedCategory)
+                selection: $selection)
 }

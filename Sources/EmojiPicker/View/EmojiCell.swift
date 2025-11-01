@@ -1,5 +1,5 @@
 // The MIT License (MIT)
-// Copyright © 2024 Ivan Izyumkin
+// Copyright © 2025 Maxwell
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -25,7 +25,7 @@ import SwiftUI
 struct EmojiCell: View {
     let emoji: Emoji
     let categoryType: EmojiCategoryType
-    @ObservedObject var viewModel: EmojiPickerViewModel
+    let onSelect: (String) -> Void
 
     @State private var isHovering = false
 
@@ -40,14 +40,14 @@ struct EmojiCell: View {
     }
 
     private var label: some View {
-        // 使用 emoji 的唯一标识、当前皮肤色调和 viewModel 的 selectedEmoji 作为 id
-        // 这样当 viewModel.selectedEmoji 更新时（包括皮肤色调更新），视图会强制刷新
-        // 刷新时会重新评估 currentSkinTone 和 currentEmojiString，确保显示正确的皮肤色调
+        // 使用 emoji 的唯一标识和当前皮肤色调作为 id
+        // 当皮肤色调变化时，只有对应的 cell 会重新渲染
+        // 不包含 selectedEmoji 避免所有 cell 都被重新创建
         Text(currentEmojiString)
             .font(.title)
             .frame(maxWidth: .infinity)
             .aspectRatio(1, contentMode: .fit)
-            .id("emoji-\(emoji.emojiKeys.map(String.init).joined(separator: "-"))-skin-\(currentSkinTone.rawValue)-selected-\(viewModel.selectedEmoji?.emojiKeys.map(String.init).joined(separator: "-") ?? "none")")
+            .id("emoji-\(emoji.emojiKeys.map(String.init).joined(separator: "-"))-skin-\(currentSkinTone.rawValue)")
             .background(isHovering ? Color.gray.opacity(0.15) : Color.clear)
             .clipShape(RoundedRectangle(cornerRadius: 10))
             .contentShape(Rectangle())
@@ -57,40 +57,30 @@ struct EmojiCell: View {
         Group {
             if emoji.isSkinToneSupport {
                 Menu {
-                    if emoji.isSkinToneSupport {
-                        Picker(selection: Binding(
-                            get: { currentSkinTone },
-                            set: { newValue in
-                                selectSkinTone(newValue)
-                            }
-                        )) {
-                            ForEach(EmojiSkinTone.allCases, id: \.rawValue) { skinTone in
-                                Text(previewEmoji(for: skinTone))
-                                    .tag(skinTone)
-                            }
-                        } label: {
-                            EmptyView()
+                    Picker(selection: Binding(
+                        get: { currentSkinTone },
+                        set: { newValue in
+                            selectSkinTone(newValue)
                         }
-                        .pickerStyle(pickerStyle)
-                    } else {
-                        Picker(selection: .constant(true)) {
-                            ForEach([true], id: \.self) { _ in
-                                Text(currentEmojiString)
-                                    .tag(true)
-                            }
-                        } label: {
-                            EmptyView()
+                    )) {
+                        ForEach(EmojiSkinTone.allCases, id: \.rawValue) { skinTone in
+                            Text(previewEmoji(for: skinTone))
+                                .tag(skinTone)
                         }
-                        .pickerStyle(pickerStyle)
+                    } label: {
+                        EmptyView()
                     }
+                    .pickerStyle(pickerStyle)
                 } label: {
                     self.label
                 } primaryAction: {
-                    viewModel.selectedEmoji = emoji
+                    emoji.incrementUsageCount()
+                    onSelect(emoji.string)
                 }
             } else {
                 Button(action: {
-                    viewModel.selectedEmoji = emoji
+                    emoji.incrementUsageCount()
+                    onSelect(emoji.string)
                 }) {
                     self.label
                 }
@@ -113,7 +103,12 @@ struct EmojiCell: View {
     // MARK: - Private Methods
 
     private func selectSkinTone(_ skinTone: EmojiSkinTone) {
-        viewModel.updateEmojiSkinTone(skinTone, for: emoji, in: categoryType)
+        // 保存皮肤色调到 UserDefaults
+        emoji.set(skinToneRawValue: skinTone.rawValue)
+        emoji.incrementUsageCount()
+        // 由于皮肤色调已保存到 UserDefaults，emoji.string 会自动读取最新的皮肤色调
+        // 直接选择 emoji
+        onSelect(emoji.string)
     }
 
     /// 生成预览 emoji 字符串，不保存到 UserDefaults
