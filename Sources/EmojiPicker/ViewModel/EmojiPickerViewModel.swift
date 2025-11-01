@@ -68,10 +68,14 @@ public class EmojiPickerViewModel: ObservableObject {
             return
         }
         
+        // 保存皮肤色调到 UserDefaults
         allEmojiCategories[allCategoriesIndex].emojis[emojiIndex].set(skinToneRawValue: skinTone.rawValue)
-        selectedEmoji = allEmojiCategories[allCategoriesIndex].emojis[emojiIndex]
         
-        // Force refresh of categories
+        // 获取更新后的 emoji（此时它应该从 UserDefaults 读取正确的皮肤色调）
+        let updatedEmoji = allEmojiCategories[allCategoriesIndex].emojis[emojiIndex]
+        selectedEmoji = updatedEmoji
+        
+        // 触发视图刷新，确保所有 EmojiCell 都会重新评估
         objectWillChange.send()
     }
 }

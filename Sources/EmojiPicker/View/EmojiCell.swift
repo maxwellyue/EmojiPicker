@@ -28,56 +28,73 @@ struct EmojiCell: View {
     @ObservedObject var viewModel: EmojiPickerViewModel
 
     @State private var isHovering = false
-    @State private var selectedSkinTone: EmojiSkinTone = .none
 
-    var body: some View {
-        Menu {
-            if emoji.isSkinToneSupport {
-                Picker(selection: Binding(
-                    get: { emoji.skinTone ?? .none },
-                    set: { newValue in
-                        selectSkinTone(newValue)
-                    }
-                )) {
-                    ForEach(EmojiSkinTone.allCases, id: \.rawValue) { skinTone in
-                        Text(previewEmoji(for: skinTone))
-                            .tag(skinTone)
-                    }
-                } label: {
-                    EmptyView()
-                }
-                .pickerStyle(pickerStyle)
-            } else {
-                Picker(selection: .constant(true)) {
-                    ForEach([true], id: \.self) { _ in
-                        Text(emoji.string)
-                            .tag(true)
-                    }
-                } label: {
-                    EmptyView()
-                }
-                .pickerStyle(pickerStyle)
-            }
-        } label: {
-            ZStack(alignment: .bottomTrailing) {
-                Text(emoji.string)
-                    .font(.title)
-                    .frame(maxWidth: .infinity)
-                    .aspectRatio(1, contentMode: .fit)
+    // 使用 computed property 来获取当前 emoji 的皮肤色调，确保每次访问都是最新的
+    private var currentSkinTone: EmojiSkinTone {
+        emoji.skinTone ?? .none
+    }
 
-                // 显示小圆点提示支持肤色
-                if emoji.isSkinToneSupport {
-                    Circle()
-                        .fill(Color.gray.opacity(0.5))
-                        .frame(width: 6, height: 6)
-                        .offset(x: -6, y: -6)
-                }
-            }
+    // 使用 computed property 来获取当前 emoji 的字符串表示，确保每次访问都从 UserDefaults 读取
+    private var currentEmojiString: String {
+        emoji.string
+    }
+
+    private var label: some View {
+        // 使用 emoji 的唯一标识、当前皮肤色调和 viewModel 的 selectedEmoji 作为 id
+        // 这样当 viewModel.selectedEmoji 更新时（包括皮肤色调更新），视图会强制刷新
+        // 刷新时会重新评估 currentSkinTone 和 currentEmojiString，确保显示正确的皮肤色调
+        Text(currentEmojiString)
+            .font(.title)
+            .frame(maxWidth: .infinity)
+            .aspectRatio(1, contentMode: .fit)
+            .id("emoji-\(emoji.emojiKeys.map(String.init).joined(separator: "-"))-skin-\(currentSkinTone.rawValue)-selected-\(viewModel.selectedEmoji?.emojiKeys.map(String.init).joined(separator: "-") ?? "none")")
             .background(isHovering ? Color.gray.opacity(0.15) : Color.clear)
             .clipShape(RoundedRectangle(cornerRadius: 10))
             .contentShape(Rectangle())
-        } primaryAction: {
-            viewModel.selectedEmoji = emoji
+    }
+
+    var body: some View {
+        Group {
+            if emoji.isSkinToneSupport {
+                Menu {
+                    if emoji.isSkinToneSupport {
+                        Picker(selection: Binding(
+                            get: { currentSkinTone },
+                            set: { newValue in
+                                selectSkinTone(newValue)
+                            }
+                        )) {
+                            ForEach(EmojiSkinTone.allCases, id: \.rawValue) { skinTone in
+                                Text(previewEmoji(for: skinTone))
+                                    .tag(skinTone)
+                            }
+                        } label: {
+                            EmptyView()
+                        }
+                        .pickerStyle(pickerStyle)
+                    } else {
+                        Picker(selection: .constant(true)) {
+                            ForEach([true], id: \.self) { _ in
+                                Text(currentEmojiString)
+                                    .tag(true)
+                            }
+                        } label: {
+                            EmptyView()
+                        }
+                        .pickerStyle(pickerStyle)
+                    }
+                } label: {
+                    self.label
+                } primaryAction: {
+                    viewModel.selectedEmoji = emoji
+                }
+            } else {
+                Button(action: {
+                    viewModel.selectedEmoji = emoji
+                }) {
+                    self.label
+                }
+            }
         }
         .buttonStyle(.borderless)
         .onHover { hovering in
@@ -97,13 +114,18 @@ struct EmojiCell: View {
 
     private func selectSkinTone(_ skinTone: EmojiSkinTone) {
         viewModel.updateEmojiSkinTone(skinTone, for: emoji, in: categoryType)
-        selectedSkinTone = skinTone
     }
 
+    /// 生成预览 emoji 字符串，不保存到 UserDefaults
     private func previewEmoji(for skinTone: EmojiSkinTone) -> String {
-        let tempEmoji = emoji
-        tempEmoji.set(skinToneRawValue: skinTone.rawValue)
-        return tempEmoji.string
+        guard emoji.isSkinToneSupport,
+              let skinToneKey = skinTone.skinKey
+        else {
+            return emoji.emojiKeys.emoji()
+        }
+        var bufferEmojiKeys = emoji.emojiKeys
+        bufferEmojiKeys.insert(skinToneKey, at: 1)
+        return bufferEmojiKeys.emoji()
     }
 }
 
