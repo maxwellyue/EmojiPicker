@@ -31,11 +31,11 @@ import AppKit
 public struct EmojiPicker: View {
     @Environment(\.dismiss) private var dismiss
 
-    @Binding public var selectedEmoji: String
+    @Binding public var selection: String
     public var isDismissAfterChoosing: Bool
 
-    public init(selectedEmoji: Binding<String>, isDismissAfterChoosing: Bool = true) {
-        self._selectedEmoji = selectedEmoji
+    public init(selection: Binding<String>, isDismissAfterChoosing: Bool = true) {
+        self._selection = selection
         self.isDismissAfterChoosing = isDismissAfterChoosing
     }
 
@@ -116,7 +116,7 @@ public struct EmojiPicker: View {
         }
         .onChange(of: viewModel.selectedEmoji) { newValue in
             if let emoji = newValue {
-                selectedEmoji = emoji.string
+                selection = emoji.string
                 if isDismissAfterChoosing {
                     dismiss()
                 }
@@ -124,7 +124,7 @@ public struct EmojiPicker: View {
         }
         .modify {
             if #available(iOS 17.0, macOS 14.0, *) {
-                $0.sensoryFeedback(.selection, trigger: self.selectedEmoji)
+                $0.sensoryFeedback(.selection, trigger: self.selection)
             } else {
                 $0
             }
@@ -160,7 +160,7 @@ extension Color {
     .padding()
     .sheet(isPresented: $isPresented) {
         EmojiPicker(
-            selectedEmoji: $selectedEmoji,
+            selection: $selectedEmoji,
             isDismissAfterChoosing: true
         )
     }

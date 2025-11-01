@@ -25,21 +25,21 @@ import SwiftUI
 /// View modifier to present emoji picker as a sheet
 public struct EmojiPickerModifier: ViewModifier {
     @Binding var isPresented: Bool
-    @Binding var selectedEmoji: String
+    @Binding var selection: String
     let isDismissAfterChoosing: Bool
-    
+
     public func body(content: Content) -> some View {
         content
             .sheet(isPresented: $isPresented) {
                 EmojiPicker(
-                    selectedEmoji: $selectedEmoji,
+                    selection: $selection,
                     isDismissAfterChoosing: isDismissAfterChoosing
                 )
             }
     }
 }
 
-extension View {
+public extension View {
     /// Presents an emoji picker as a sheet
     ///
     /// - Parameters:
@@ -47,16 +47,15 @@ extension View {
     ///   - selectedEmoji: Binding to receive the selected emoji
     ///   - isDismissAfterChoosing: Whether to dismiss after selecting an emoji (default: true)
     ///   - selectedCategoryTintColor: Color for the selected category (default: .blue)
-    public func emojiPicker(
+    func emojiPicker(
         isPresented: Binding<Bool>,
-        selectedEmoji: Binding<String>,
+        selection: Binding<String>,
         isDismissAfterChoosing: Bool = true
     ) -> some View {
         modifier(EmojiPickerModifier(
             isPresented: isPresented,
-            selectedEmoji: selectedEmoji,
+            selection: selection,
             isDismissAfterChoosing: isDismissAfterChoosing
         ))
     }
 }
-
