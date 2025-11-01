@@ -87,8 +87,6 @@ public struct EmojiPicker: View {
             #if os(iOS) || targetEnvironment(macCatalyst)
                 .navigationBarTitleDisplayMode(.inline)
             #endif
-                .presentationDetents([.medium, .large])
-                .presentationDragIndicator(.visible)
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) {
                         Button {

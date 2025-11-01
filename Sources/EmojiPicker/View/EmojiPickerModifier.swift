@@ -35,6 +35,12 @@ public struct EmojiPickerModifier: ViewModifier {
                     selection: $selection,
                     isDismissAfterChoosing: isDismissAfterChoosing
                 )
+                #if targetEnvironment(macCatalyst)
+                .presentationDetents([.large])
+                #else
+                .presentationDetents([.medium, .large])
+                .presentationDragIndicator(.visible)
+                #endif
             }
     }
 }
