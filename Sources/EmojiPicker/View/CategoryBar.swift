@@ -20,9 +20,6 @@
 // SOFTWARE.
 
 import SwiftUI
-#if os(iOS)
-    import UIKit
-#endif
 
 /// 底部分类栏视图
 struct CategoryBar: View {
@@ -57,14 +54,11 @@ struct CategoryBar: View {
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
-                #if os(macOS)
-                    .help(category.categoryName)
-                #endif
+                .help(category.categoryName)
             }
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 8)
-        .background(Color.pickerBackground)
         .modify {
             if #available(iOS 17.0, macOS 14.0, *) {
                 $0.sensoryFeedback(.selection, trigger: self.selectedCategory)

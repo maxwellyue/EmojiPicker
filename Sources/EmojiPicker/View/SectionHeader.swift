@@ -35,7 +35,6 @@ struct SectionHeader: View {
         .padding(.horizontal)
         .padding(.top, 12)
         .padding(.bottom, 6)
-        .background(Color.pickerBackground.opacity(0.95))
     }
 }
 

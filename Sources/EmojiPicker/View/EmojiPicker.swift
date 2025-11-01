@@ -1,6 +1,6 @@
 // The MIT License (MIT)
 //
-// Copyright © 2022 Ivan Izyumkin
+// Copyright © 2025 Maxwell
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -21,11 +21,6 @@
 // SOFTWARE.
 
 import SwiftUI
-#if os(iOS)
-import UIKit
-#elseif os(macOS)
-import AppKit
-#endif
 
 /// 主 Emoji 选择器视图
 public struct EmojiPicker: View {
@@ -112,7 +107,13 @@ public struct EmojiPicker: View {
                         }
                     }
                 }
-                .background(Color.pickerBackground)
+                .background({
+                    #if os(macOS)
+                        return Color(nsColor: .controlBackgroundColor)
+                    #else
+                        return Color(uiColor: .systemGroupedBackground)
+                    #endif
+                }())
         }
         .onChange(of: viewModel.selectedEmoji) { newValue in
             if let emoji = newValue {
@@ -131,20 +132,6 @@ public struct EmojiPicker: View {
         }
     }
 }
-
-// MARK: - Platform Color Extension
-
-extension Color {
-    static var pickerBackground: Color {
-        #if os(macOS)
-        return Color(nsColor: .controlBackgroundColor)
-        #else
-        return Color(uiColor: .systemGroupedBackground)
-        #endif
-    }
-}
-
-// MARK: - Preview
 
 @available(iOS 17.0, macOS 14.0, *)
 #Preview {

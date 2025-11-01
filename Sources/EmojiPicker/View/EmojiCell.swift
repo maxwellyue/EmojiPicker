@@ -20,9 +20,6 @@
 // SOFTWARE.
 
 import SwiftUI
-#if os(iOS)
-import UIKit
-#endif
 
 /// Emoji 单元格视图，支持肤色选择
 struct EmojiCell: View {
@@ -80,23 +77,16 @@ struct EmojiCell: View {
             .clipShape(RoundedRectangle(cornerRadius: 10))
             .contentShape(Rectangle())
         } primaryAction: {
-            // 点击直接选择当前肤色的 emoji
             viewModel.selectedEmoji = emoji
-            #if os(iOS)
-            let generator = UIImpactFeedbackGenerator(style: .light)
-            generator.impactOccurred()
-            #endif
         }
         .buttonStyle(.borderless)
-        #if os(macOS) || targetEnvironment(macCatalyst)
-            .onHover { hovering in
-                isHovering = hovering
-            }
-        #endif
+        .onHover { hovering in
+            isHovering = hovering
+        }
     }
 
     private var pickerStyle: some PickerStyle {
-        if #available(iOS 17.0, *) {
+        if #available(iOS 17.0, macOS 14.0, *) {
             return .palette
         } else {
             return .inline
