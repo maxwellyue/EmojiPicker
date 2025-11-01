@@ -29,49 +29,24 @@ import AppKit
 
 /// 主 Emoji 选择器视图
 public struct EmojiPicker: View {
-    // MARK: - Properties
-
-    @StateObject private var viewModel = EmojiPickerViewModel()
-    @Binding public var selectedEmoji: String
     @Environment(\.dismiss) private var dismiss
 
+    @Binding public var selectedEmoji: String
     public var isDismissAfterChoosing: Bool
-
-    // 使用 viewModel.selectedCategory 作为唯一滚动位置来源
-    @Namespace private var scrollNamespace
-    @State private var isScrollingProgrammatically = false
-
-    // MARK: - Constants
-
-    private let columns = [GridItem(.adaptive(minimum: 36, maximum: .infinity), spacing: 12)]
-
-    private let categoryIcons: [EmojiCategoryType: String] = [
-        .frequentlyUsed: "clock.fill",
-        .people: "face.smiling",
-        .nature: "pawprint.fill",
-        .foodAndDrink: "cup.and.saucer.fill",
-        .activity: "figure.run",
-        .travelAndPlaces: "airplane",
-        .objects: "lightbulb.fill",
-        .symbols: "heart.fill",
-        .flags: "flag.fill"
-    ]
-
-    // MARK: - Initializers
 
     public init(selectedEmoji: Binding<String>, isDismissAfterChoosing: Bool = true) {
         self._selectedEmoji = selectedEmoji
         self.isDismissAfterChoosing = isDismissAfterChoosing
     }
 
-    // MARK: - Body
+    @StateObject private var viewModel = EmojiPickerViewModel()
 
     public var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
                 ScrollViewReader { scrollProxy in
                     ScrollView {
-                        LazyVGrid(columns: columns, spacing: 12) {
+                        LazyVGrid(columns: [GridItem(.adaptive(minimum: 36, maximum: .infinity), spacing: 12)], spacing: 12) {
                             ForEach(viewModel.emojiCategories, id: \.type) { category in
                                 Section {
                                     ForEach(category.emojis, id: \.self) { emoji in
@@ -108,11 +83,9 @@ public struct EmojiPicker: View {
 
                 Divider()
 
-                // Category Bar
                 CategoryBar(
                     categories: viewModel.emojiCategories,
-                    selectedCategory: $viewModel.selectedCategory,
-                    categoryIcons: categoryIcons
+                    selectedCategory: $viewModel.selectedCategory
                 )
             }
             .navigationTitle("Emoji")
@@ -144,16 +117,16 @@ public struct EmojiPicker: View {
         .onChange(of: viewModel.selectedEmoji) { newValue in
             if let emoji = newValue {
                 selectedEmoji = emoji.string
-                emoji.incrementUsageCount()
-
-                #if os(iOS)
-                let generator = UINotificationFeedbackGenerator()
-                generator.notificationOccurred(.success)
-                #endif
-
                 if isDismissAfterChoosing {
                     dismiss()
                 }
+            }
+        }
+        .modify {
+            if #available(iOS 17.0, macOS 14.0, *) {
+                $0.sensoryFeedback(.selection, trigger: self.selectedEmoji)
+            } else {
+                $0
             }
         }
     }
@@ -175,7 +148,7 @@ extension Color {
 
 @available(iOS 17.0, macOS 14.0, *)
 #Preview {
-    @Previewable @State var isPresented = false
+    @Previewable @State var isPresented = true
     @Previewable @State var selectedEmoji = ""
 
     Button(action: {

@@ -21,40 +21,37 @@
 
 import SwiftUI
 #if os(iOS)
-import UIKit
+    import UIKit
 #endif
 
 /// 底部分类栏视图
 struct CategoryBar: View {
     let categories: [EmojiCategory]
     @Binding var selectedCategory: EmojiCategoryType?
-    let categoryIcons: [EmojiCategoryType: String]
+
+    private let categoryIcons: [EmojiCategoryType: String] = [
+        .frequentlyUsed: "clock",
+        .people: "face.smiling",
+        .nature: "dog",
+        .foodAndDrink: "fork.knife",
+        .activity: "soccerball",
+        .travelAndPlaces: "car",
+        .objects: "lightbulb",
+        .symbols: "heart",
+        .flags: "flag"
+    ]
 
     var body: some View {
         HStack(spacing: 4) {
-            ForEach(Array(categories.enumerated()), id: \.offset) { index, category in
+            ForEach(Array(categories.enumerated()), id: \.offset) { _, category in
                 Button {
                     selectedCategory = category.type
-
-                    #if os(iOS)
-                    let generator = UIImpactFeedbackGenerator(style: .light)
-                    generator.impactOccurred()
-                    #endif
                 } label: {
                     VStack(spacing: 4) {
                         let isSelected = (selectedCategory == category.type)
                         Image(systemName: categoryIcons[category.type] ?? "questionmark")
-                            .font(.system(size: 22, weight: isSelected ? .semibold : .regular))
+                            .font(.title2)
                             .foregroundStyle(isSelected ? AnyShapeStyle(.tint) : AnyShapeStyle(Color.secondary))
-
-                        if selectedCategory == category.type {
-                            RoundedRectangle(cornerRadius: 2)
-                                .fill(.tint)
-                                .frame(width: 24, height: 3)
-                        } else {
-                            Color.clear
-                                .frame(width: 24, height: 3)
-                        }
                     }
                     .frame(maxWidth: .infinity)
                     .contentShape(Rectangle())
@@ -68,5 +65,19 @@ struct CategoryBar: View {
         .padding(.horizontal, 8)
         .padding(.vertical, 8)
         .background(Color.pickerBackground)
+        .modify {
+            if #available(iOS 17.0, macOS 14.0, *) {
+                $0.sensoryFeedback(.selection, trigger: self.selectedCategory)
+            } else {
+                $0
+            }
+        }
     }
+}
+
+@available(iOS 18.0, macOS 15.0, *)
+#Preview {
+    @Previewable @State var selectedCategory: EmojiCategoryType?
+    CategoryBar(categories: UnicodeManager().getEmojisForCurrentIOSVersion(),
+                selectedCategory: $selectedCategory)
 }

@@ -30,12 +30,11 @@ public class EmojiPickerViewModel: ObservableObject {
     
     @Published public var selectedEmoji: Emoji?
     @Published public var selectedCategory: EmojiCategoryType? = .frequentlyUsed
-    @Published public var showEmptyEmojiCategories: Bool = false
-    
+
     // MARK: - Public Properties
     
     public var emojiCategories: [EmojiCategory] {
-        allEmojiCategories.filter { showEmptyEmojiCategories || !$0.emojis.isEmpty }
+        allEmojiCategories.filter { !$0.emojis.isEmpty }
     }
 
     // MARK: - Private Properties

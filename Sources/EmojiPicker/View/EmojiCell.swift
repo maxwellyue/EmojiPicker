@@ -88,7 +88,7 @@ struct EmojiCell: View {
             #endif
         }
         .buttonStyle(.borderless)
-        #if os(macOS)
+        #if os(macOS) || targetEnvironment(macCatalyst)
             .onHover { hovering in
                 isHovering = hovering
             }
