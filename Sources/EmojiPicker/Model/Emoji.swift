@@ -62,7 +62,7 @@ public extension Emoji {
         var key: String {
             switch self {
             case .skinTone(let emoji):
-                return emoji.emojiKeys.emoji()
+                return "emoji-picker-" + emoji.emojiKeys.emoji()
             case .usageTimestamps(let emoji):
                 return StorageKeys.skinTone(emoji).key + "-usage-timestamps"
             }
