@@ -15,6 +15,14 @@ public enum EmojiSkinTone: Int, CaseIterable {
     case mediumDark = 5
     case dark = 6
 
+    static let effectiveValues: [EmojiSkinTone] = [
+        .light,
+        .mediumLight,
+        .medium,
+        .mediumDark,
+        .dark
+    ]
+
     /// Hex value for the skin tone.
     public var skinKey: Int? {
         switch self {

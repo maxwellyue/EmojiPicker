@@ -30,18 +30,24 @@ public struct EmojiPickerModifier: ViewModifier {
 
     public func body(content: Content) -> some View {
         content
-            .sheet(isPresented: $isPresented) {
+        #if targetEnvironment(macCatalyst) || os(macOS)
+        .popover(isPresented: $isPresented) {
+            EmojiPicker(
+                selection: $selection,
+                isDismissAfterChoosing: isDismissAfterChoosing
+            )
+            .frame(width: 400, height: 500)
+        }
+        #else
+        .sheet(isPresented: $isPresented) {
                 EmojiPicker(
                     selection: $selection,
                     isDismissAfterChoosing: isDismissAfterChoosing
                 )
-                #if targetEnvironment(macCatalyst)
-                .presentationDetents([.large])
-                #else
                 .presentationDetents([.medium, .large])
                 .presentationDragIndicator(.visible)
-                #endif
             }
+        #endif
     }
 }
 
@@ -63,5 +69,24 @@ public extension View {
             selection: selection,
             isDismissAfterChoosing: isDismissAfterChoosing
         ))
+    }
+}
+
+@available(iOS 17.0, macOS 14.0, *)
+#Preview {
+    @Previewable @State var isPresented = true
+    @Previewable @State var selectedEmoji = ""
+    VStack {
+        Button(action: {
+            isPresented.toggle()
+        }) {
+            Text(verbatim: "Show Emoji Picker")
+        }
+        .buttonStyle(.borderedProminent)
+        .padding()
+        .emojiPicker(isPresented: $isPresented, selection: $selectedEmoji)
+
+        Text(selectedEmoji)
+            .font(.largeTitle)
     }
 }

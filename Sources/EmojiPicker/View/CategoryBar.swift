@@ -45,15 +45,14 @@ struct CategoryBar: View {
                     selection = category.type
                 } label: {
                     VStack(spacing: 4) {
-                        let isSelected = (selection == category.type)
                         Image(systemName: categoryIcons[category.type] ?? "questionmark")
                             .font(.title2)
-                            .foregroundStyle(isSelected ? AnyShapeStyle(.tint) : AnyShapeStyle(Color.secondary))
+                            .foregroundStyle(Color.secondary)
                     }
                     .frame(maxWidth: .infinity)
                     .contentShape(Rectangle())
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.borderless)
                 .help(category.categoryName)
             }
         }

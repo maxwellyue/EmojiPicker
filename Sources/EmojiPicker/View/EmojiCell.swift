@@ -28,6 +28,7 @@ struct EmojiCell: View {
     let onSelect: (String) -> Void
 
     @State private var isHovering = false
+    @State private var showPopover = false
 
     // 使用 computed property 来获取当前 emoji 的皮肤色调，确保每次访问都是最新的
     private var currentSkinTone: EmojiSkinTone {
@@ -54,42 +55,43 @@ struct EmojiCell: View {
     }
 
     var body: some View {
-        Group {
-            if emoji.isSkinToneSupport {
-                Menu {
-                    Picker(selection: Binding(
-                        get: { currentSkinTone },
-                        set: { newValue in
-                            selectSkinTone(newValue)
-                        }
-                    )) {
-                        ForEach(EmojiSkinTone.allCases, id: \.rawValue) { skinTone in
-                            Text(previewEmoji(for: skinTone))
-                                .tag(skinTone)
-                        }
-                    } label: {
-                        EmptyView()
-                    }
-                    .pickerStyle(pickerStyle)
-                } label: {
-                    self.label
-                } primaryAction: {
-                    emoji.incrementUsageCount()
-                    onSelect(emoji.string)
-                }
-            } else {
-                Button(action: {
-                    emoji.incrementUsageCount()
-                    onSelect(emoji.string)
-                }) {
-                    self.label
+        label
+            .onTapGesture {
+                emoji.incrementUsageCount()
+                onSelect(emoji.string)
+            }
+            .onLongPressGesture {
+                if emoji.isSkinToneSupport {
+                    showPopover = true
                 }
             }
+            .alwaysPopover(isPresented: $showPopover) {
+                HStack(spacing: 0) {
+                    emojiItem(for: .none)
+                        .frame(width: 36, alignment: .center)
+                    Divider()
+                        .frame(width: 16)
+                    ForEach(EmojiSkinTone.effectiveValues, id: \.rawValue) { skinTone in
+                        emojiItem(for: skinTone)
+                    }
+                }
+                .font(.headline)
+                .frame(width: 36 * 6 + 16 + 12, height: 28)
+            }
+            .onHover { hovering in
+                isHovering = hovering
+            }
+    }
+
+    private func emojiItem(for skinTone: EmojiSkinTone) -> some View {
+        Button(action: {
+            self.showPopover = false
+            selectSkinTone(skinTone)
+        }) {
+            Text(previewEmoji(for: skinTone))
+                .frame(width: 36, alignment: .center)
         }
         .buttonStyle(.borderless)
-        .onHover { hovering in
-            isHovering = hovering
-        }
     }
 
     private var pickerStyle: some PickerStyle {

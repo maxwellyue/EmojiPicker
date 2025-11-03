@@ -39,47 +39,54 @@ public struct EmojiPicker: View {
     @State private var allEmojiCategories: [EmojiCategory] = []
     private let unicodeManager: UnicodeManagerProtocol
 
+    var frequentlyUsedCategory: EmojiCategory? {
+        allEmojiCategories.first(where: { $0.type == .frequentlyUsed })
+    }
+
+    var standardCategories: [EmojiCategory] {
+        allEmojiCategories.filter { $0.type != .frequentlyUsed }
+    }
+
     public var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
                 ScrollViewReader { scrollProxy in
                     ScrollView {
-                        LazyVGrid(columns: [GridItem(.adaptive(minimum: 36, maximum: .infinity), spacing: 12)], spacing: 12) {
-                            ForEach(allEmojiCategories, id: \.type) { category in
-                                Section {
-                                    ForEach(category.emojis, id: \.self) { emoji in
-                                        EmojiCell(
-                                            emoji: emoji,
-                                            categoryType: category.type,
-                                            onSelect: { emojiString in
-                                                selection = emojiString
-                                                if isDismissAfterChoosing {
-                                                    dismiss()
-                                                }
+                        VStack(spacing: 12) {
+                            if let frequentlyUsedCategory {
+                                LazyVGrid(columns: [GridItem(.adaptive(minimum: 36, maximum: .infinity), spacing: 12)], spacing: 12) {
+                                    CategorySection(
+                                        category: frequentlyUsedCategory,
+                                        onSelect: { emojiString in
+                                            selection = emojiString
+                                            if isDismissAfterChoosing {
+                                                dismiss()
                                             }
-                                        )
-                                        // 使用 category.type 和 emojiKeys 作为唯一 id
-                                        .id("\(category.type.rawValue)-\(emoji.emojiKeys)")
-                                    }
-                                } header: {
-                                    SectionHeader(title: category.categoryName)
+                                        }
+                                    )
                                 }
-                                // 配合 scrollTo 和 scrollPosition
-                                .id(category.type)
+                            }
+
+                            LazyVGrid(columns: [GridItem(.adaptive(minimum: 36, maximum: .infinity), spacing: 12)], spacing: 12) {
+                                ForEach(standardCategories, id: \.type) { category in
+                                    CategorySection(
+                                        category: category,
+                                        onSelect: { emojiString in
+                                            selection = emojiString
+                                            if isDismissAfterChoosing {
+                                                dismiss()
+                                            }
+                                        }
+                                    )
+                                }
                             }
                         }
                         .padding(.horizontal, 12)
-                        .applyScrollTargetLayout()
                     }
-                    .modify {
-                        if #available(iOS 17.0, macOS 14.0, *) {
-                            $0.scrollPosition(id: $currentCategory, anchor: .top)
-                        } else {
-                            $0.onChange(of: currentCategory) { newType in
-                                withAnimation {
-                                    scrollProxy.scrollTo(newType, anchor: .top)
-                                }
-                            }
+                    .onChange(of: currentCategory) { newType in
+                        guard let newType else { return }
+                        withAnimation {
+                            scrollProxy.scrollTo(newType, anchor: .top)
                         }
                     }
                 }
@@ -128,6 +135,28 @@ public struct EmojiPicker: View {
             } else {
                 $0
             }
+        }
+    }
+}
+
+struct CategorySection: View {
+    let category: EmojiCategory
+    var onSelect: (String) -> Void
+
+    var body: some View {
+        Section {
+            ForEach(category.emojis, id: \.self) { emoji in
+                EmojiCell(
+                    emoji: emoji,
+                    categoryType: category.type,
+                    onSelect: { emojiString in
+                        self.onSelect(emojiString)
+                    }
+                )
+            }
+        } header: {
+            SectionHeader(title: category.categoryName)
+                .id(category.type)
         }
     }
 }

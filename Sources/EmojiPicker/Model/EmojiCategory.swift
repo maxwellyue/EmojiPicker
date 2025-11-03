@@ -38,7 +38,7 @@ public struct EmojiCategory: Codable {
 }
 
 /// This enumeration shows a list of categories that are contained in the main collection.
-public enum EmojiCategoryType: Int, CaseIterable, Codable {
+public enum EmojiCategoryType: Int, CaseIterable, Codable, Hashable {
     case frequentlyUsed
     case people
     case nature
