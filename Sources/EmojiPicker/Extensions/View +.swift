@@ -33,8 +33,10 @@ extension View {
     func alwaysPopover<PopoverContent: View>(isPresented: Binding<Bool>, content: @escaping () -> PopoverContent) -> some View {
         #if targetEnvironment(macCatalyst) || os(iOS)
         if #available(iOS 16.4, *) {
-            self.popover(isPresented: isPresented, content: content)
-                .presentationCompactAdaptation(.popover)
+            self.popover(isPresented: isPresented) {
+                content()
+                    .presentationCompactAdaptation(.popover)
+            }
         } else {
             self.background(
                 LegacyPopover(isPresented: isPresented, popoverContent: content())

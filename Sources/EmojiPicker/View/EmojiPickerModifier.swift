@@ -31,7 +31,7 @@ public struct EmojiPickerModifier: ViewModifier {
     public func body(content: Content) -> some View {
         content
         #if targetEnvironment(macCatalyst) || os(macOS)
-        .popover(isPresented: $isPresented) {
+        .alwaysPopover(isPresented: $isPresented) {
             EmojiPicker(
                 selection: $selection,
                 isDismissAfterChoosing: isDismissAfterChoosing
