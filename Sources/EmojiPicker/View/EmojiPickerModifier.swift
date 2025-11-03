@@ -36,7 +36,7 @@ public struct EmojiPickerModifier: ViewModifier {
                 selection: $selection,
                 isDismissAfterChoosing: isDismissAfterChoosing
             )
-            .frame(width: 400, height: 500)
+            .frame(width: 400, height: 600)
         }
         #else
         .sheet(isPresented: $isPresented) {
